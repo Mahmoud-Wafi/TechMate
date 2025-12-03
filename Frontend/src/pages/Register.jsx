@@ -133,7 +133,7 @@ const Register = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="student">Student</option>
-                  {/* <option value="instructor">Instructor</option> */}
+                  <option value="instructor">Instructor</option>
                 </select>
               </div>
             </div>

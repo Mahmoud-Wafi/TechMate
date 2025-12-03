@@ -1,38 +1,4 @@
-// import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
 
-// function App() {
-//   const [count, setCount] = useState(0)
-
-//   return (
-//     <>
-//       <div>
-//         <a href="https://vite.dev" target="_blank">
-//           <img src={viteLogo} className="logo" alt="Vite logo" />
-//         </a>
-//         <a href="https://react.dev" target="_blank">
-//           <img src={reactLogo} className="logo react" alt="React logo" />
-//         </a>
-//       </div>
-//       <h1>Vite + React</h1>
-//       <div className="card">
-//         <button onClick={() => setCount((count) => count + 1)}>
-//           count is {count}
-//         </button>
-//         <p>
-//           Edit <code>src/App.jsx</code> and save to test HMR
-//         </p>
-//       </div>
-//       <p className="read-the-docs">
-//         Click on the Vite and React logos to learn more
-//       </p>
-//     </>
-//   )
-// }
-
-// export default App
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -46,6 +12,11 @@ import ResetPassword from './pages/ResetPassword';
 import Tutorials from './pages/Tutorials';
 import TutorialDetail from './pages/TutorialDetail';
 import Profile from './pages/Profile';
+import InstructorDashboard from './pages/InstructorDashboard';
+import CreateTutorial from './pages/CreateTutorial';
+import AddContent from './pages/AddContent';
+import InstructorRoute from './components/InstructorRoute';
+
 import './index.css';
 
 function App() {
@@ -70,6 +41,49 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            {/* Instructor routes */}
+<Route
+  path="/instructor/dashboard"
+  element={
+    <ProtectedRoute>
+      <InstructorRoute>
+        <InstructorDashboard />
+      </InstructorRoute>
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/instructor/tutorials/create"
+  element={
+    <ProtectedRoute>
+      <InstructorRoute>
+        <CreateTutorial />
+      </InstructorRoute>
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/instructor/tutorials/:id/add-content"
+  element={
+    <ProtectedRoute>
+      <InstructorRoute>
+        <AddContent />
+      </InstructorRoute>
+    </ProtectedRoute>
+  }
+/>
+{/* optional: edit tutorial route */}
+<Route
+  path="/instructor/tutorials/:id/edit"
+  element={
+    <ProtectedRoute>
+      <InstructorRoute>
+        <CreateTutorial />
+      </InstructorRoute>
+    </ProtectedRoute>
+  }
+/>
+
           </Routes>
         </div>
       </Router>

@@ -11,7 +11,7 @@ from .models import Profile
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['name', 'age', 'role']
+        fields = ['name', 'age', 'role','is_approved_instructor']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class RegisterSerializer(serializers.Serializer):
     password_confirm = serializers.CharField(write_only=True)
     name = serializers.CharField(max_length=255)
     age = serializers.IntegerField(required=False, allow_null=True)
-    # role = serializers.ChoiceField(choices=['student', 'instructor'], default='student')
+    role = serializers.ChoiceField(choices=['student', 'instructor'], default='student')
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -56,7 +56,7 @@ class RegisterSerializer(serializers.Serializer):
             user=user,
             name=validated_data['name'],
             age=validated_data.get('age'),
-            # role=validated_data.get('role', 'student')
+            role=validated_data.get('role', 'student')
         )
         return user
 

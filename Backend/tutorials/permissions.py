@@ -7,7 +7,10 @@ class IsInstructorOrAdmin(permissions.BasePermission):
             return False
         if hasattr(request.user, 'profile'):
             return request.user.profile.role in ['instructor', 'admin']
+        if hasattr(request.user, 'profile') and request.user.profile.role == 'instructor':
+            return bool(request.user.profile.is_approved_instructor)
         return False
+        
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -23,3 +26,5 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         if hasattr(obj, 'tutorial'):
             return obj.tutorial.created_by == request.user
         return False
+    
+    

@@ -15,6 +15,8 @@ class Profile(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_approved_instructor = models.BooleanField(default=False)
+
 
     def __str__(self) -> str:
         return f"{self.user.username} - {self.name}"

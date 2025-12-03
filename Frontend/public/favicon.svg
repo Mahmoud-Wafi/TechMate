@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <path d="M32 4 L58 18 V46 L32 60 L6 46 V18 Z" fill="#0F172A"/>
+  <path d="M22 20 H42 M32 20 V34" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="32" cy="34" r="3" fill="#10B981"/>
+  <text x="32" y="48" font-family="Arial, sans-serif" font-weight="bold" font-size="9" text-anchor="middle" fill="white" letter-spacing="0.5">TECHMATE</text>
+</svg>

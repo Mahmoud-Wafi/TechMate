@@ -83,6 +83,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     isAuthenticated: !!user,
+     // helper:
+  isInstructorApproved: !!(user && ((user.profile && user.profile.is_approved_instructor) || user.profile?.is_approved_instructor)),
+
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
