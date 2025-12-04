@@ -226,17 +226,13 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5000,http://localhost:5173').split(',')
+cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5000,http://localhost:5173')
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
-CSRF_TRUSTED_ORIGINS = [
-    "https://tech-mate-jh.vercel.app",
-]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 CORS_ALLOW_HEADERS = ["*"]
 CORS_ALLOW_METHODS = ["*"]
-CORS_ALLOWED_ORIGINS = [
-    "https://tech-mate-jh.vercel.app",
-]
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
