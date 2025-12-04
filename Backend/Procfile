@@ -1,2 +1,2 @@
-release: python manage.py migrate
-web: gunicorn techmate.wsgi:application --log-file -
+release: python manage.py migrate --noinput || true
+web: gunicorn techmate.wsgi:application --bind 0.0.0.0:8080 --timeout 120
