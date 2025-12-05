@@ -4,6 +4,7 @@ import { tutorialsAPI, progressAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import ContentItem from "../components/ContentItem";
 import ProgressBar from "../components/ProgressBar";
+import CertificateModal from "../components/CertificateModal";
 import {
   FaArrowLeft,
   FaSpinner,
@@ -19,7 +20,7 @@ import {
 
 const TutorialDetail = () => {
   const { id } = useParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [tutorial, setTutorial] = useState(null);
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,8 @@ const TutorialDetail = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("order");
+  const [showCertificate, setShowCertificate] = useState(false);
+  const [wasCompleted, setWasCompleted] = useState(false);
 
   useEffect(() => {
     fetchTutorial();
@@ -76,11 +79,14 @@ const TutorialDetail = () => {
         newCompleted = [...currentCompleted, contentId];
       }
 
+      const isNowComplete = newCompleted.length === tutorial.contents.length;
+      const wasAlreadyComplete = progress?.completed || false;
+
       setProgress((prev) => ({
         ...prev,
         completed_content_ids: newCompleted,
         percentage: (newCompleted.length / tutorial.contents.length) * 100,
-        completed: newCompleted.length === tutorial.contents.length,
+        completed: isNowComplete,
       }));
 
       const response = await progressAPI.update(id, newCompleted);
@@ -88,6 +94,11 @@ const TutorialDetail = () => {
         ...response.data,
         completed_content_ids: response.data.completed_content_ids,
       });
+
+      // Show certificate if just completed
+      if (isNowComplete && !wasAlreadyComplete) {
+        setShowCertificate(true);
+      }
     } catch (error) {
       console.error("Error updating progress:", error);
       fetchTutorial();
@@ -414,6 +425,14 @@ const TutorialDetail = () => {
           </div>
         )}
       </div>
+
+      {/* Certificate Modal */}
+      <CertificateModal
+        isOpen={showCertificate}
+        onClose={() => setShowCertificate(false)}
+        tutorial={tutorial}
+        user={user}
+      />
     </div>
   );
 };
