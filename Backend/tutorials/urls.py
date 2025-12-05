@@ -32,8 +32,8 @@ urlpatterns = [
 ]
 
 # Certificate URLs
-certificate_urls = [
-    path('api/certificates/', CertificateViewSet.as_view({'get': 'my_certificates'}), name='my_certificates'),
-    path('api/certificates/issue/', CertificateViewSet.as_view({'post': 'issue_for_tutorial'}), name='issue_certificate'),
-    path('api/certificates/<int:pk>/download/', CertificateViewSet.as_view({'get': 'download_pdf'}), name='download_certificate'),
+urlpatterns += [
+    path('certificates/', CertificateViewSet.as_view({'get': 'my_certificates'}), name='my_certificates'),
+    path('certificates/issue/', CertificateViewSet.as_view({'post': 'issue_for_tutorial'}), name='issue_certificate'),
+    path('certificates/<int:pk>/download/', CertificateViewSet.as_view({'get': 'download_pdf'}), name='download_certificate'),
 ]

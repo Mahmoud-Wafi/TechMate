@@ -11,7 +11,7 @@ export default function CertificateModal({ isOpen, onClose, tutorial, user }) {
   const issueCertificate = async () => {
     setLoading(true);
     try {
-      const response = await api.post('/api/certificates/issue/', {
+      const response = await api.post('/certificates/issue/', {
         tutorial_id: tutorial.id,
       });
       setCertificate(response.data);
@@ -25,7 +25,7 @@ export default function CertificateModal({ isOpen, onClose, tutorial, user }) {
 
   const downloadCertificate = async () => {
     try {
-      const response = await api.get(`/api/certificates/${certificate.id}/download/`, {
+      const response = await api.get(`/certificates/${certificate.id}/download/`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
