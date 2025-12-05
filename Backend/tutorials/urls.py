@@ -19,7 +19,6 @@ from .views import (
     TutorialListCreateView, TutorialDetailView, TutorialContentCreateView,
     TutorialContentDetailView, UserProgressView, UserDashboardView, InstructorMyTutorialsView
 )
-from .certificate_views import CertificateViewSet
 
 urlpatterns = [
     path('', TutorialListCreateView.as_view(), name='tutorial_list'),
@@ -29,11 +28,4 @@ urlpatterns = [
     path('<int:tutorial_id>/contents/', TutorialContentCreateView.as_view(), name='content_create'),
     path('contents/<int:pk>/', TutorialContentDetailView.as_view(), name='content_detail'),
     path('<int:tutorial_id>/progress/', UserProgressView.as_view(), name='user_progress'),
-]
-
-# Certificate URLs
-urlpatterns += [
-    path('certificates/', CertificateViewSet.as_view({'get': 'my_certificates'}), name='my_certificates'),
-    path('certificates/issue/', CertificateViewSet.as_view({'post': 'issue_for_tutorial'}), name='issue_certificate'),
-    path('certificates/<int:pk>/download/', CertificateViewSet.as_view({'get': 'download_pdf'}), name='download_certificate'),
 ]
