@@ -1,4 +1,4 @@
-from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageTemplate, Frame, Image as RLImage
@@ -11,91 +11,44 @@ from PIL import Image, ImageDraw, ImageFont
 import math
 import os
 
-class CertificateCanvas(canvas.Canvas):
-    """Custom canvas to add watermark and background"""
+def create_certificate_background():
+    """Create modern certificate background with curved wave design"""
+    # Landscape A4 dimensions in pixels (300 DPI)
+    width_px = 3508
+    height_px = 2480
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.width, self.height = landscape(A4)
-    
-    def draw_watermark(self):
-        """Draw watermark text"""
-        self.setFont("Helvetica", 72)
-        self.setFillAlpha(0.08)
-        self.setFillColor(colors.HexColor('#1e3a8a'))
-        
-        # Rotate and write watermark
-        self.saveState()
-        self.translate(self.width / 2, self.height / 2)
-        self.rotate(45)
-        self.drawString(-2 * inch, 0, "TechMate")
-        self.restoreState()
-
-def create_premium_logo(size=200):
-    """Create a premium TechMate logo"""
-    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    img = Image.new('RGB', (width_px, height_px), color=(255, 255, 255))
     draw = ImageDraw.Draw(img)
     
-    # Color scheme
-    primary_blue = (30, 58, 138)      # #1e3a8a
-    secondary_blue = (37, 99, 235)    # #2563eb
-    accent_green = (16, 185, 129)     # #10b981
-    gold = (212, 175, 55)             # #d4af37
+    # Top wave design with gradient
+    wave_height = int(height_px * 0.15)
     
-    center = size // 2
+    # Draw blue curved wave at top
+    blue_dark = (0, 102, 204)  # Blue
     
-    # Draw outer circle (medal-like)
-    circle_radius = size // 2 - 10
-    draw.ellipse(
-        [(center - circle_radius, center - circle_radius),
-         (center + circle_radius, center + circle_radius)],
-        fill=primary_blue,
-        outline=gold,
-        width=4
-    )
+    # Create curved path using polygon
+    points = [(0, 0)]
+    for x in range(0, width_px + 100, 100):
+        y = int(wave_height * 0.5 * math.sin((x / width_px) * math.pi) + wave_height * 0.5)
+        points.append((x, y))
+    points.append((width_px, 0))
+    points.append((0, 0))
     
-    # Draw inner circle
-    inner_radius = circle_radius - 12
-    draw.ellipse(
-        [(center - inner_radius, center - inner_radius),
-         (center + inner_radius, center + inner_radius)],
-        outline=gold,
-        width=2
-    )
+    draw.polygon(points, fill=blue_dark)
     
-    # Draw stylized "T" shape (like a tech tower)
-    line_width = 6
-    
-    # Vertical stem
+    # Bottom dark gray section
+    bottom_section_height = int(height_px * 0.12)
     draw.rectangle(
-        [(center - 15, center - 50), (center + 15, center + 30)],
-        fill=accent_green,
-        outline=None
+        [(0, height_px - bottom_section_height), (width_px, height_px)],
+        fill=(80, 80, 80)
     )
     
-    # Top horizontal bar
-    draw.rectangle(
-        [(center - 40, center - 50), (center + 40, center - 35)],
-        fill=accent_green,
-        outline=None
+    # Horizontal line separator
+    draw.line(
+        [(0, height_px - bottom_section_height), (width_px, height_px - bottom_section_height)],
+        fill=(200, 200, 200),
+        width=3
     )
-    
-    # Add circuit-like lines for tech feel
-    line_color = gold
-    draw.line([(center - 35, center - 30), (center - 50, center - 30)], fill=line_color, width=2)
-    draw.line([(center - 50, center - 30), (center - 50, center)], fill=line_color, width=2)
-    
-    draw.line([(center + 35, center - 30), (center + 50, center - 30)], fill=line_color, width=2)
-    draw.line([(center + 50, center - 30), (center + 50, center)], fill=line_color, width=2)
-    
-    # Small circles for circuit nodes
-    node_radius = 4
-    draw.ellipse([(center - 50 - node_radius, center - 30 - node_radius),
-                  (center - 50 + node_radius, center - 30 + node_radius)],
-                 fill=accent_green)
-    draw.ellipse([(center + 50 - node_radius, center - 30 - node_radius),
-                  (center + 50 + node_radius, center - 30 + node_radius)],
-                 fill=accent_green)
     
     # Convert to bytes
     img_bytes = BytesIO()
@@ -103,45 +56,102 @@ def create_premium_logo(size=200):
     img_bytes.seek(0)
     return img_bytes
 
-def create_seal_badge(size=120):
-    """Create a decorative seal badge"""
+def create_seal_badge(size=200):
+    """Create circular seal badge"""
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     
-    gold = (212, 175, 55)
-    primary_blue = (30, 58, 138)
-    
+    # Red seal
+    red_color = (220, 20, 60)  # Crimson red
     center = size // 2
-    radius = size // 2 - 8
+    radius = size // 2 - 5
     
-    # Draw main circle
+    # Outer circle
     draw.ellipse(
         [(center - radius, center - radius),
          (center + radius, center + radius)],
-        fill=gold,
-        outline=primary_blue,
-        width=3
+        fill=red_color
     )
     
-    # Draw inner circle
-    inner_radius = radius - 10
+    # Inner circle (darker red for depth)
+    inner_radius = radius - 8
     draw.ellipse(
         [(center - inner_radius, center - inner_radius),
          (center + inner_radius, center + inner_radius)],
-        fill=None,
-        outline=primary_blue,
+        outline=(180, 10, 40),
         width=2
     )
     
-    # Add star points
-    for i in range(8):
-        angle = i * 45
+    # Star points around seal
+    for i in range(12):
+        angle = i * 30
         rad = math.radians(angle)
-        x1 = center + radius * 0.9 * math.cos(rad)
-        y1 = center + radius * 0.9 * math.sin(rad)
-        x2 = center + (radius - 5) * math.cos(rad)
-        y2 = center + (radius - 5) * math.sin(rad)
-        draw.line([(x1, y1), (x2, y2)], fill=primary_blue, width=2)
+        
+        x1 = center + radius * 1.1 * math.cos(rad)
+        y1 = center + radius * 1.1 * math.sin(rad)
+        x2 = center + (radius + 10) * math.cos(rad)
+        y2 = center + (radius + 10) * math.sin(rad)
+        
+        draw.line([(x1, y1), (x2, y2)], fill=red_color, width=3)
+    
+    img_bytes = BytesIO()
+    img.save(img_bytes, format='PNG')
+    img_bytes.seek(0)
+    return img_bytes
+
+def create_techmate_logo(size=180):
+    """Create TechMate logo - stylized T with orange accent"""
+    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    
+    # TechMate brand colors
+    primary_blue = (0, 51, 102)       # Dark blue #003366
+    orange = (255, 127, 0)             # Orange #FF7F00
+    
+    # Logo proportions
+    padding = size // 10
+    logo_size = size - (padding * 2)
+    start_x = padding
+    start_y = padding
+    
+    # Vertical bar (with rounded corners)
+    stem_width = logo_size // 5
+    stem_height = logo_size * 0.75
+    
+    draw.rounded_rectangle(
+        [(start_x + logo_size // 3 - stem_width // 2, 
+          start_y + logo_size * 0.15),
+         (start_x + logo_size // 3 + stem_width // 2, 
+          start_y + logo_size * 0.15 + stem_height)],
+        radius=int(stem_width // 4),
+        fill=primary_blue
+    )
+    
+    # Horizontal bar of T (top)
+    bar_width = logo_size * 0.55
+    bar_height = logo_size // 6
+    
+    draw.rounded_rectangle(
+        [(start_x + logo_size // 3 - bar_width // 2, 
+          start_y + logo_size * 0.15),
+         (start_x + logo_size // 3 + bar_width // 2, 
+          start_y + logo_size * 0.15 + bar_height)],
+        radius=int(bar_height // 3),
+        fill=primary_blue
+    )
+    
+    # Orange accent square (top right)
+    accent_size = logo_size // 4
+    accent_radius = accent_size // 6
+    
+    draw.rounded_rectangle(
+        [(start_x + logo_size * 0.55, 
+          start_y + logo_size * 0.15),
+         (start_x + logo_size * 0.55 + accent_size, 
+          start_y + logo_size * 0.15 + accent_size)],
+        radius=int(accent_radius),
+        fill=orange
+    )
     
     img_bytes = BytesIO()
     img.save(img_bytes, format='PNG')
@@ -149,50 +159,55 @@ def create_seal_badge(size=120):
     return img_bytes
 
 def generate_certificate_pdf(user, tutorial, certificate_number):
-    """Generate premium professional certificate PDF"""
+    """Generate modern professional certificate PDF"""
     
     buffer = BytesIO()
     page_size = landscape(A4)
     
-    # Create document with custom canvas
     doc = SimpleDocTemplate(
         buffer,
         pagesize=page_size,
         rightMargin=0.5*inch,
         leftMargin=0.5*inch,
-        topMargin=0.4*inch,
-        bottomMargin=0.4*inch
+        topMargin=0.3*inch,
+        bottomMargin=0.3*inch
     )
     
     styles = getSampleStyleSheet()
     
-    # Premium color scheme
-    primary_blue = colors.HexColor('#1e3a8a')
-    secondary_blue = colors.HexColor('#2563eb')
-    accent_green = colors.HexColor('#10b981')
-    text_dark = colors.HexColor('#0f172a')
-    text_gray = colors.HexColor('#475569')
-    gold = colors.HexColor('#d4af37')
-    light_bg = colors.HexColor('#f8fafc')
+    # Color scheme
+    primary_blue = colors.HexColor('#006699')
+    dark_gray = colors.HexColor('#505050')
+    light_gray = colors.HexColor('#e8e8e8')
+    text_color = colors.HexColor('#333333')
     
-    # Define premium styles
-    title_style = ParagraphStyle(
-        'CertTitle',
-        parent=styles['Heading1'],
-        fontSize=66,
-        textColor=primary_blue,
-        spaceAfter=5,
+    # Define styles
+    certificate_title_style = ParagraphStyle(
+        'CertificateTitle',
+        parent=styles['Normal'],
+        fontSize=48,
+        textColor=dark_gray,
+        spaceAfter=3,
         alignment=TA_CENTER,
-        fontName='Helvetica-Bold',
-        leading=72
+        fontName='Helvetica-Bold'
     )
     
-    subtitle_text_style = ParagraphStyle(
-        'SubtitleText',
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
         parent=styles['Normal'],
-        fontSize=16,
-        textColor=text_gray,
+        fontSize=14,
+        textColor=text_color,
         spaceAfter=15,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    intro_style = ParagraphStyle(
+        'Intro',
+        parent=styles['Normal'],
+        fontSize=12,
+        textColor=text_color,
+        spaceAfter=8,
         alignment=TA_CENTER,
         fontName='Helvetica'
     )
@@ -200,183 +215,142 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     name_style = ParagraphStyle(
         'Name',
         parent=styles['Normal'],
-        fontSize=40,
-        textColor=secondary_blue,
-        spaceAfter=8,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold',
-        leading=44
-    )
-    
-    course_style = ParagraphStyle(
-        'Course',
-        parent=styles['Normal'],
-        fontSize=24,
-        textColor=accent_green,
+        fontSize=42,
+        textColor=primary_blue,
         spaceAfter=20,
         alignment=TA_CENTER,
-        fontName='Helvetica-BoldOblique',
-        leading=28
+        fontName='Helvetica-Bold',
+        leading=46
     )
     
-    body_style = ParagraphStyle(
-        'Body',
+    detail_label_style = ParagraphStyle(
+        'DetailLabel',
         parent=styles['Normal'],
-        fontSize=12,
-        textColor=text_gray,
-        spaceAfter=8,
-        alignment=TA_CENTER,
-        fontName='Helvetica'
-    )
-    
-    footer_style = ParagraphStyle(
-        'Footer',
-        parent=styles['Normal'],
-        fontSize=9,
-        textColor=colors.HexColor('#64748b'),
-        spaceAfter=3,
-        alignment=TA_CENTER,
-        fontName='Helvetica'
-    )
-    
-    details_label_style = ParagraphStyle(
-        'DetailsLabel',
-        parent=styles['Normal'],
-        fontSize=9,
-        textColor=text_dark,
+        fontSize=10,
+        textColor=dark_gray,
         spaceAfter=2,
-        alignment=TA_CENTER,
+        alignment=TA_LEFT,
         fontName='Helvetica-Bold'
     )
     
-    details_value_style = ParagraphStyle(
-        'DetailsValue',
+    detail_value_style = ParagraphStyle(
+        'DetailValue',
         parent=styles['Normal'],
         fontSize=11,
-        textColor=secondary_blue,
-        spaceAfter=6,
+        textColor=text_color,
+        spaceAfter=12,
+        alignment=TA_LEFT,
+        fontName='Helvetica'
+    )
+    
+    signature_style = ParagraphStyle(
+        'Signature',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=dark_gray,
+        spaceAfter=4,
         alignment=TA_CENTER,
-        fontName='Helvetica-Bold'
+        fontName='Helvetica'
     )
     
     content = []
     
-    # Top decorative border
-    top_border = Table([['']], colWidths=[7.5*inch])
-    top_border.setStyle(TableStyle([
-        ('LINEABOVE', (0, 0), (-1, -1), 4, gold),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]))
-    content.append(top_border)
-    content.append(Spacer(1, 0.25*inch))
+    # Top spacing for wave
+    content.append(Spacer(1, 0.35*inch))
     
-    # Logo
-    logo_bytes = create_premium_logo(size=160)
-    logo_path = '/tmp/tm_logo.png'
+    # Logo - top left
+    logo_bytes = create_techmate_logo(size=140)
+    logo_path = '/tmp/tm_logo_cert.png'
     try:
         with open(logo_path, 'wb') as f:
             f.write(logo_bytes.getvalue())
         
-        logo_img = RLImage(logo_path, width=0.9*inch, height=0.9*inch)
-        logo_table = Table([[logo_img]], colWidths=[7.5*inch])
+        logo_img = RLImage(logo_path, width=0.6*inch, height=0.6*inch)
+        logo_table = Table(
+            [[logo_img, '', '']],
+            colWidths=[0.8*inch, 2.5*inch, 3.2*inch]
+        )
         logo_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]))
         content.append(logo_table)
-        content.append(Spacer(1, 0.12*inch))
     except:
         pass
     
-    # Main title
-    content.append(Paragraph("Certificate of Completion", title_style))
-    content.append(Spacer(1, 0.08*inch))
+    content.append(Spacer(1, 0.15*inch))
     
-    # Decorative line under title
-    title_line = Table([['']], colWidths=[4*inch])
-    title_line.setStyle(TableStyle([
-        ('LINEABOVE', (0, 0), (-1, -1), 2, gold),
+    # Certificate title
+    content.append(Paragraph("CERTIFICATE", certificate_title_style))
+    content.append(Paragraph("Course Completion", subtitle_style))
+    
+    # Decorative line
+    line_table = Table([['']], colWidths=[3.5*inch])
+    line_table.setStyle(TableStyle([
+        ('LINEABOVE', (0, 0), (-1, -1), 2, primary_blue),
         ('TOPPADDING', (0, 0), (-1, -1), 0),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]))
-    content.append(title_line)
-    content.append(Spacer(1, 0.12*inch))
+    content.append(line_table)
     
-    # Certification text
-    content.append(Paragraph("This is to certify that", subtitle_text_style))
-    content.append(Spacer(1, 0.1*inch))
+    content.append(Spacer(1, 0.15*inch))
+    
+    # Intro text
+    content.append(Paragraph("This is to certify that", intro_style))
+    
+    content.append(Spacer(1, 0.08*inch))
     
     # User name
     user_name = user.get_full_name() or user.username
     content.append(Paragraph(user_name, name_style))
-    content.append(Spacer(1, 0.15*inch))
     
-    # Achievement text
-    content.append(Paragraph("has successfully completed the course", subtitle_text_style))
-    content.append(Spacer(1, 0.08*inch))
+    content.append(Spacer(1, 0.05*inch))
     
-    # Course/Tutorial title
-    content.append(Paragraph(tutorial.title, course_style))
-    content.append(Spacer(1, 0.18*inch))
-    
-    # Certificate details section
+    # Details section
     issue_date = datetime.now().strftime("%B %d, %Y")
     
-    details_data = [
+    details_table = Table([
         [
-            Paragraph("Certificate Number", details_label_style),
-            Paragraph("Date of Issue", details_label_style)
+            Paragraph("<b>Course Name :</b>", detail_label_style),
+            Paragraph(tutorial.title, detail_value_style)
         ],
         [
-            Paragraph(certificate_number, details_value_style),
-            Paragraph(issue_date, details_value_style)
+            Paragraph("<b>Date :</b>", detail_label_style),
+            Paragraph(issue_date, detail_value_style)
+        ],
+        [
+            Paragraph("<b>Signature :</b>", detail_label_style),
+            Paragraph("TechMate Team", detail_value_style)
         ]
-    ]
-    
-    details_table = Table(
-        details_data,
-        colWidths=[3.2*inch, 3.2*inch],
-        hAlign='CENTER'
-    )
+    ], colWidths=[1.5*inch, 5*inch])
     
     details_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('BACKGROUND', (0, 0), (-1, 0), light_bg),
-        ('BORDER', (0, 0), (-1, -1), 1, gold),
-        ('TOPPADDING', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-        ('LEFTPADDING', (0, 0), (-1, -1), 15),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
     
     content.append(details_table)
-    content.append(Spacer(1, 0.2*inch))
     
-    # Decorative line before footer
-    footer_line = Table([['']], colWidths=[4*inch])
-    footer_line.setStyle(TableStyle([
-        ('LINEABOVE', (0, 0), (-1, -1), 2, gold),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]))
-    content.append(footer_line)
-    content.append(Spacer(1, 0.1*inch))
+    content.append(Spacer(1, 0.15*inch))
     
-    # Footer branding
-    content.append(Paragraph("<b>TechMate Learning Platform</b>", body_style))
-    content.append(Paragraph("<i>Empowering Learners Worldwide</i>", footer_style))
-    content.append(Spacer(1, 0.08*inch))
-    
-    # Bottom decorative border
-    bottom_border = Table([['']], colWidths=[7.5*inch])
-    bottom_border.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, -1), 4, gold),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]))
-    content.append(bottom_border)
+    # Seal badge - centered
+    seal_bytes = create_seal_badge(size=150)
+    seal_path = '/tmp/seal_badge.png'
+    try:
+        with open(seal_path, 'wb') as f:
+            f.write(seal_bytes.getvalue())
+        
+        seal_img = RLImage(seal_path, width=0.8*inch, height=0.8*inch)
+        seal_table = Table([[seal_img]], colWidths=[7*inch])
+        seal_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ]))
+        content.append(seal_table)
+    except:
+        pass
     
     # Build PDF
     try:
@@ -389,6 +363,8 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
         try:
             if os.path.exists(logo_path):
                 os.remove(logo_path)
+            if os.path.exists(seal_path):
+                os.remove(seal_path)
         except:
             pass
     
