@@ -6,14 +6,6 @@ from datetime import datetime
 from io import BytesIO
 import math
 
-def create_wave_path(y_offset, width, amplitude, frequency):
-    """Create wave points for path drawing"""
-    points = []
-    for x in range(0, int(width) + 1, 10):
-        y = y_offset + amplitude * math.sin((x / width) * frequency * math.pi)
-        points.append((x, y))
-    return points
-
 def generate_certificate_pdf(user, tutorial, certificate_number):
     """Generate modern professional certificate PDF with wave design"""
     
@@ -32,27 +24,23 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     
     # ===== BACKGROUND DESIGN =====
     
-    # Top blue wave
-    wave_points = create_wave_path(130, page_width, 60, 1)
-    wave_poly = [wave_points[0]]
-    wave_poly.extend(wave_points)
-    wave_poly.append((page_width, 0))
-    wave_poly.append((0, 0))
-    
+    # Top blue section (simulating wave)
     c.setFillColor(blue_dark)
-    c.drawPolygon(wave_poly, fill=True, stroke=False)
+    c.rect(0, page_height - 130, page_width, 130, fill=True, stroke=False)
+    
+    # Add curved wave effect with path
+    c.setStrokeColor(blue_dark)
+    c.setLineWidth(1)
     
     # Bottom dark section
-    bottom_height = page_height * 0.12
     c.setFillColor(colors.HexColor('#505050'))
-    c.rect(0, 0, page_width, bottom_height, fill=True, stroke=False)
+    c.rect(0, 0, page_width, 100, fill=True, stroke=False)
     
     # ===== LOGO (Top Left) =====
     logo_x = 50
-    logo_y = page_height - 100
-    logo_size = 60
+    logo_y = page_height - 90
     
-    # Vertical bar (dark blue)
+    # Dark blue vertical bar
     c.setFillColor(blue_dark)
     c.rect(logo_x + 15, logo_y - 45, 12, 50, fill=True)
     
@@ -75,12 +63,12 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     # Subtitle
     c.setFont("Helvetica", 16)
     c.setFillColor(text_gray)
-    c.drawCentredString(title_x, title_y - 35, "Course Completion")
+    c.drawCentredString(title_x, title_y - 40, "Course Completion")
     
     # Decorative line under subtitle
     c.setStrokeColor(blue_dark)
     c.setLineWidth(2)
-    c.line(title_x - 150, title_y - 50, title_x + 150, title_y - 50)
+    c.line(title_x - 150, title_y - 55, title_x + 150, title_y - 55)
     
     # Intro text
     c.setFont("Helvetica", 13)
@@ -91,17 +79,16 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     user_name = user.get_full_name() or user.username
     c.setFont("Helvetica-Bold", 52)
     c.setFillColor(blue_dark)
-    c.drawCentredString(title_x, title_y - 150, user_name)
+    c.drawCentredString(title_x, title_y - 155, user_name)
     
     # Details section (left aligned)
-    detail_y = title_y - 220
-    label_x = 80
-    value_x = 280
-    
-    c.setFont("Helvetica-Bold", 11)
-    c.setFillColor(dark_gray)
+    detail_y = title_y - 230
+    label_x = 100
+    value_x = 300
     
     # Course Name
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(dark_gray)
     c.drawString(label_x, detail_y, "Course Name :")
     c.setFont("Helvetica", 12)
     c.setFillColor(text_gray)
@@ -128,17 +115,16 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     
     # ===== RED SEAL BADGE =====
     seal_x = title_x
-    seal_y = detail_y - 100
+    seal_y = detail_y - 90
     seal_radius = 35
     
-    # Draw circles for seal
+    # Draw main circle for seal
     c.setFillColor(red_seal)
     c.circle(seal_x, seal_y, seal_radius, fill=True, stroke=False)
     
     # Inner circle outline
     c.setStrokeColor(colors.HexColor('#B4082A'))
     c.setLineWidth(2)
-    c.setFillColor(None)
     c.circle(seal_x, seal_y, seal_radius - 8, fill=False, stroke=True)
     
     # Star points around seal
