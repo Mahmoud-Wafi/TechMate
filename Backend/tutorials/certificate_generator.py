@@ -34,19 +34,35 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     
 
     
+    # ===== WATERMARK =====
+    # Add semi-transparent watermark text
+    c.setFont("Helvetica-Bold", 100)
+    c.setFillAlpha(0.08)  # 8% opacity
+    c.setFillColor(colors.HexColor('#006699'))
+    c.saveState()
+    c.translate(page_width / 2, page_height / 2)
+    c.rotate(45)
+    c.drawCentredString(0, 0, "TechMate")
+    c.restoreState()
+    c.setFillAlpha(1.0)  # Reset to full opacity
+    
     # ===== LOGO (Top Left) =====
     logo_x = 50
     logo_y = page_height - 90
     
-    # Dark blue vertical bar
-    c.setFillColor(blue_dark)
+    # Logo colors - Orange and Blue (swapped)
+    logo_color1 = orange  # Orange for main
+    logo_color2 = colors.HexColor('#FF7F00')  # Orange for details
+    
+    # Orange vertical bar
+    c.setFillColor(logo_color1)
     c.rect(logo_x + 15, logo_y - 45, 12, 50, fill=True)
     
-    # Horizontal bar
+    # Orange horizontal bar
     c.rect(logo_x, logo_y - 35, 45, 12, fill=True)
     
-    # Orange accent square
-    c.setFillColor(orange)
+    # Dark blue accent square
+    c.setFillColor(blue_dark)
     c.rect(logo_x + 35, logo_y - 35, 25, 25, fill=True)
     
     # ===== MAIN CONTENT =====
