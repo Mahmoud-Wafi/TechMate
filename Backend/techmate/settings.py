@@ -8,7 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security & Debug
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-only-for-development')
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = ['*']
+# Allowed Hosts - in production, specify your domain
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',') if os.environ.get('ALLOWED_HOSTS') else ['*']
 
 # Applications
 INSTALLED_APPS = [
@@ -58,13 +59,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'techmate.wsgi.application'
 
 # Database Configuration
-# Uses SQLite by default, can be overridden with environment variables
+# Uses PostgreSQL if DATABASE_URL is provided (production), otherwise SQLite (development)
+import dj_database_url
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Override with PostgreSQL if DATABASE_URL is set (Railway/Production)
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    DATABASES['default'] = dj_database_url.parse(database_url, conn_max_age=600)
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -112,7 +120,13 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration - Allow frontend
-CORS_ALLOW_ALL_ORIGINS = True
+# In production, set CORS_ALLOWED_ORIGINS environment variable with comma-separated origins
+cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS')
+if cors_origins:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
+    CORS_ALLOW_ALL_ORIGINS = False
+else:
+    CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Email Configuration
