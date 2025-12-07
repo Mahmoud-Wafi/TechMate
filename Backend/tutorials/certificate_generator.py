@@ -96,11 +96,8 @@ def create_modern_background(width_px, height_px):
                   (width_px - 80, 70 + circle_radius * 2)], 
                  fill=accent_color, outline=gold, width=2)
     
-    # Convert to bytes
-    img_bytes = BytesIO()
-    img.save(img_bytes, format='PNG')
-    img_bytes.seek(0)
-    return img_bytes
+    # Return the PIL Image directly
+    return img
 
 def create_techmate_logo_image(size=300):
     """Create professional TechMate logo"""
