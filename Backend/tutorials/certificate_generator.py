@@ -37,8 +37,8 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     # ===== WATERMARK =====
     # Add semi-transparent watermark text
     c.setFont("Helvetica-Bold", 100)
-    c.setFillAlpha(0.08)  # 8% opacity
-    c.setFillColor(colors.HexColor('#006699'))
+    c.setFillAlpha(0.05)  # 5% opacity - very transparent
+    c.setFillColor(colors.HexColor('#FF7F00'))  # Orange color
     c.saveState()
     c.translate(page_width / 2, page_height / 2)
     c.rotate(45)
