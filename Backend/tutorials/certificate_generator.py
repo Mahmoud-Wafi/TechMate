@@ -1,71 +1,100 @@
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageTemplate, Frame, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageTemplate, Frame, Image as RLImage
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 from io import BytesIO
 from datetime import datetime
-import os
-from PIL import Image as PILImage, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
+import math
 
-def create_certificate_background(width, height):
-    """Create a modern certificate background with gradient and design elements"""
-    # Create image
-    img = PILImage.new('RGB', (width, height), color=(255, 255, 255))
-    draw = ImageDraw.Draw(img)
+def create_modern_background(width_px, height_px):
+    """Create modern certificate background with gradient, decorative elements, and watermark"""
+    img = Image.new('RGB', (width_px, height_px), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img, 'RGBA')
     
-    # Create gradient-like effect with subtle colors
-    # Top blue gradient
-    for i in range(height // 3):
-        shade = int(79 + (74 - 79) * (i / (height // 3)))  # 4f to 4a
-        draw.rectangle([(0, i), (width, i + 1)], fill=(shade, 70 + int(10 * (i / (height // 3))), 229))
+    # Create subtle gradient background
+    for y in range(height_px):
+        # Gradient from light blue at top to white at bottom
+        ratio = y / height_px
+        r = int(248 + (15 - 248) * ratio * 0.05)
+        g = int(250 + (23 - 250) * ratio * 0.05)
+        b = int(252 + (42 - 252) * ratio * 0.1)
+        draw.line([(0, y), (width_px, y)], fill=(r, g, b))
     
-    # Light background for content
-    draw.rectangle([(0, height // 3), (width, height)], fill=(248, 249, 250))
+    # Gold accent borders
+    gold = (212, 175, 55)
+    border_width = 12
     
-    # Decorative corners - gold borders
-    border_width = 8
-    gold_color = (212, 175, 55)  # Gold
+    # Outer border
+    draw.rectangle([(0, 0), (width_px, height_px)], outline=gold, width=border_width)
     
-    # Top border
-    draw.rectangle([(0, 0), (width, border_width)], fill=gold_color)
-    # Bottom border
-    draw.rectangle([(0, height - border_width), (width, height)], fill=gold_color)
-    # Left border
-    draw.rectangle([(0, 0), (border_width, height)], fill=gold_color)
-    # Right border
-    draw.rectangle([(width - border_width, 0), (width, height)], fill=gold_color)
+    # Inner decorative border
+    inner_margin = 30
+    draw.rectangle(
+        [(inner_margin, inner_margin), 
+         (width_px - inner_margin, height_px - inner_margin)],
+        outline=gold, width=2
+    )
     
-    # Decorative corner elements (small squares)
-    corner_size = 20
-    corner_offset = 30
-    draw.rectangle([
-        (corner_offset, corner_offset),
-        (corner_offset + corner_size, corner_offset + corner_size)
-    ], outline=gold_color, width=3)
+    # Decorative corner elements
+    corner_size = 30
+    corner_offset = 40
     
-    draw.rectangle([
-        (width - corner_offset - corner_size, corner_offset),
-        (width - corner_offset, corner_offset + corner_size)
-    ], outline=gold_color, width=3)
+    corners = [
+        (corner_offset, corner_offset),  # Top-left
+        (width_px - corner_offset - corner_size, corner_offset),  # Top-right
+        (corner_offset, height_px - corner_offset - corner_size),  # Bottom-left
+        (width_px - corner_offset - corner_size, height_px - corner_offset - corner_size)  # Bottom-right
+    ]
     
-    draw.rectangle([
-        (corner_offset, height - corner_offset - corner_size),
-        (corner_offset + corner_size, height - corner_offset)
-    ], outline=gold_color, width=3)
+    for x, y in corners:
+        # Outer square
+        draw.rectangle([(x, y), (x + corner_size, y + corner_size)], outline=gold, width=3)
+        # Inner square
+        draw.rectangle(
+            [(x + 8, y + 8), (x + corner_size - 8, y + corner_size - 8)],
+            outline=gold, width=1
+        )
     
-    draw.rectangle([
-        (width - corner_offset - corner_size, height - corner_offset - corner_size),
-        (width - corner_offset, height - corner_offset)
-    ], outline=gold_color, width=3)
+    # Watermark - semi-transparent TechMate text
+    watermark_text = "TECHMATE"
+    opacity = 40
+    text_color = (200, 200, 200, opacity)
     
-    # Add decorative line elements
+    # Create watermark by drawing diagonal text
+    font_size = 120
+    try:
+        # Try to use a better font if available
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+    except:
+        font = ImageFont.load_default()
+    
+    # Draw watermark text diagonally across the entire certificate
+    spacing = 350
+    for offset_y in range(-height_px, height_px * 2, spacing):
+        for offset_x in range(-width_px, width_px * 2, spacing):
+            draw.text((offset_x, offset_y), watermark_text, fill=text_color, font=font)
+    
+    # Decorative line elements
     line_color = (200, 160, 40)
-    draw.line([(50, height // 3 + 40), (width - 50, height // 3 + 40)], fill=line_color, width=2)
-    draw.line([(50, height - 120), (width - 50, height - 120)], fill=line_color, width=2)
+    # Top decorative line
+    draw.line([(100, 80), (width_px - 100, 80)], fill=line_color, width=2)
+    # Bottom decorative line
+    draw.line([(100, height_px - 80), (width_px - 100, height_px - 80)], fill=line_color, width=2)
+    
+    # Add accent circles
+    accent_color = (30, 144, 255)  # Dodger blue
+    circle_radius = 8
+    
+    # Top circles
+    draw.ellipse([(80, 70), (80 + circle_radius * 2, 70 + circle_radius * 2)], 
+                 fill=accent_color, outline=gold, width=2)
+    draw.ellipse([(width_px - 80 - circle_radius * 2, 70), 
+                  (width_px - 80, 70 + circle_radius * 2)], 
+                 fill=accent_color, outline=gold, width=2)
     
     # Convert to bytes
     img_bytes = BytesIO()
@@ -73,45 +102,99 @@ def create_certificate_background(width, height):
     img_bytes.seek(0)
     return img_bytes
 
+def create_techmate_logo_image(size=300):
+    """Create professional TechMate logo"""
+    logo = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(logo)
+    
+    dark_bg = (15, 23, 42)
+    accent_green = (16, 185, 129)
+    gold = (212, 175, 55)
+    
+    center = size // 2
+    radius = size // 3
+    
+    # Draw hexagon
+    points = []
+    for i in range(6):
+        angle = i * 60
+        x = center + radius * math.cos(math.radians(angle))
+        y = center + radius * math.sin(math.radians(angle))
+        points.append((x, y))
+    
+    draw.polygon(points, fill=dark_bg, outline=gold, width=4)
+    
+    # Draw tech symbol (stylized T and M)
+    line_width = 6
+    # Vertical line
+    draw.line([(center - 40, center - 50), (center - 40, center + 50)], 
+              fill=accent_green, width=line_width)
+    # Horizontal line
+    draw.line([(center - 70, center - 50), (center - 10, center - 50)], 
+              fill=accent_green, width=line_width)
+    
+    # M shape
+    draw.line([(center + 10, center - 50), (center + 10, center + 50)], 
+              fill=accent_green, width=line_width)
+    draw.line([(center + 10, center - 50), (center + 35, center)], 
+              fill=accent_green, width=line_width)
+    draw.line([(center + 35, center), (center + 60, center - 50)], 
+              fill=accent_green, width=line_width)
+    draw.line([(center + 60, center - 50), (center + 60, center + 50)], 
+              fill=accent_green, width=line_width)
+    
+    return logo
+
 def generate_certificate_pdf(user, tutorial, certificate_number):
-    """Generate professional modern certificate PDF"""
+    """Generate modern, professional certificate PDF with logo and watermark"""
     
     buffer = BytesIO()
-    # Use landscape orientation for a more traditional certificate look
+    page_size = landscape(A4)
+    
     doc = SimpleDocTemplate(
         buffer,
-        pagesize=landscape(A4),
-        rightMargin=0.75*inch,
-        leftMargin=0.75*inch,
-        topMargin=0.5*inch,
-        bottomMargin=0.5*inch
+        pagesize=page_size,
+        rightMargin=0.5*inch,
+        leftMargin=0.5*inch,
+        topMargin=0.4*inch,
+        bottomMargin=0.4*inch
     )
     
     # Create background
-    bg_width = int(landscape(A4)[0] * 72 / 2.54)  # Convert to pixels
-    bg_height = int(landscape(A4)[1] * 72 / 2.54)
-    bg_image = create_certificate_background(bg_width, bg_height)
+    bg_width = int(page_size[0] * 72 / 2.54)
+    bg_height = int(page_size[1] * 72 / 2.54)
+    bg_image = create_modern_background(bg_width, bg_height)
+    
+    # Save background temporarily
+    bg_path = '/tmp/cert_bg.png'
+    bg_image.save(bg_path)
     
     styles = getSampleStyleSheet()
     
-    # Define modern styles
+    # Modern color scheme
+    primary_blue = colors.HexColor('#1e3a8a')
+    secondary_blue = colors.HexColor('#2563eb')
+    accent_green = colors.HexColor('#10b981')
+    text_gray = colors.HexColor('#334155')
+    
+    # Define styles
     title_style = ParagraphStyle(
         'Title',
         parent=styles['Heading1'],
-        fontSize=56,
-        textColor=colors.HexColor('#1e40af'),
-        spaceAfter=10,
+        fontSize=60,
+        textColor=primary_blue,
+        spaceAfter=8,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold',
-        leading=60
+        leading=65
     )
     
     subtitle_style = ParagraphStyle(
         'Subtitle',
         parent=styles['Normal'],
-        fontSize=16,
-        textColor=colors.HexColor('#475569'),
-        spaceAfter=20,
+        fontSize=15,
+        textColor=text_gray,
+        spaceAfter=12,
         alignment=TA_CENTER,
         fontName='Helvetica'
     )
@@ -119,31 +202,31 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     name_style = ParagraphStyle(
         'Name',
         parent=styles['Normal'],
-        fontSize=32,
-        textColor=colors.HexColor('#1e3a8a'),
-        spaceAfter=15,
+        fontSize=36,
+        textColor=secondary_blue,
+        spaceAfter=10,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold',
-        leading=36
+        leading=40
     )
     
     course_style = ParagraphStyle(
         'Course',
         parent=styles['Normal'],
-        fontSize=20,
-        textColor=colors.HexColor('#2563eb'),
-        spaceAfter=25,
+        fontSize=22,
+        textColor=accent_green,
+        spaceAfter=20,
         alignment=TA_CENTER,
         fontName='Helvetica-BoldOblique',
-        leading=24
+        leading=26
     )
     
     body_style = ParagraphStyle(
         'Body',
         parent=styles['Normal'],
-        fontSize=12,
-        textColor=colors.HexColor('#334155'),
-        spaceAfter=10,
+        fontSize=11,
+        textColor=text_gray,
+        spaceAfter=8,
         alignment=TA_CENTER,
         fontName='Helvetica'
     )
@@ -151,9 +234,9 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     footer_style = ParagraphStyle(
         'Footer',
         parent=styles['Normal'],
-        fontSize=10,
+        fontSize=9,
         textColor=colors.HexColor('#64748b'),
-        spaceAfter=5,
+        spaceAfter=3,
         alignment=TA_CENTER,
         fontName='Helvetica-Oblique'
     )
@@ -162,8 +245,8 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
         'Details',
         parent=styles['Normal'],
         fontSize=10,
-        textColor=colors.HexColor('#475569'),
-        spaceAfter=5,
+        textColor=text_gray,
+        spaceAfter=4,
         alignment=TA_CENTER,
         fontName='Helvetica'
     )
@@ -171,43 +254,54 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     content = []
     
     # Top spacing
-    content.append(Spacer(1, 0.3*inch))
+    content.append(Spacer(1, 0.25*inch))
+    
+    # Logo
+    try:
+        logo_img = create_techmate_logo_image(size=150)
+        logo_path = '/tmp/techmate_logo.png'
+        logo_img.save(logo_path)
+        logo = RLImage(logo_path, width=0.8*inch, height=0.8*inch)
+        logo.hAlign = 'CENTER'
+        content.append(logo)
+        content.append(Spacer(1, 0.15*inch))
+    except:
+        pass
     
     # Title
     content.append(Paragraph("Certificate of Completion", title_style))
-    content.append(Spacer(1, 0.15*inch))
+    content.append(Spacer(1, 0.12*inch))
     
     # Subtitle
     content.append(Paragraph("This is to certify that", subtitle_style))
-    content.append(Spacer(1, 0.1*inch))
-    
-    # User name (highlight)
-    user_name = user.get_full_name() or user.username
-    content.append(Paragraph(user_name, name_style))
-    content.append(Spacer(1, 0.15*inch))
-    
-    # Achievement text
-    content.append(Paragraph("has successfully completed the course", subtitle_style))
     content.append(Spacer(1, 0.08*inch))
     
-    # Course/Tutorial title
-    content.append(Paragraph(tutorial.title, course_style))
-    content.append(Spacer(1, 0.25*inch))
+    # User name
+    user_name = user.get_full_name() or user.username
+    content.append(Paragraph(user_name, name_style))
+    content.append(Spacer(1, 0.12*inch))
     
-    # Certificate details
+    # Achievement text
+    content.append(Paragraph("has successfully completed", subtitle_style))
+    content.append(Spacer(1, 0.05*inch))
+    
+    # Course title
+    content.append(Paragraph(tutorial.title, course_style))
+    content.append(Spacer(1, 0.18*inch))
+    
+    # Certificate details in a professional table
     issue_date = datetime.now().strftime("%B %d, %Y")
     
-    # Create a table for details
     details_data = [
         [
-            f"<b>Certificate Number:</b><br/>{certificate_number}",
-            f"<b>Issued Date:</b><br/>{issue_date}"
+            f"<b>Certificate Number</b><br/>{certificate_number}",
+            f"<b>Issued Date</b><br/>{issue_date}"
         ]
     ]
     
     details_table = Table(
         details_data,
-        colWidths=[3*inch, 3*inch],
+        colWidths=[3.2*inch, 3.2*inch],
         hAlign='CENTER'
     )
     
@@ -216,21 +310,34 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#334155')),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (-1, -1), text_gray),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 15),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+        ('BORDER', (0, 0), (-1, -1), 1),
+        ('BORDERCOLOR', (0, 0), (-1, -1), colors.HexColor('#d4af37')),
     ]))
     
     content.append(details_table)
-    content.append(Spacer(1, 0.3*inch))
+    content.append(Spacer(1, 0.25*inch))
     
-    # Platform branding
-    content.append(Paragraph("<b>TechMate Learning Platform</b>", body_style))
-    content.append(Paragraph("Empowering Learners Worldwide", footer_style))
+    # Platform branding with TechMate emphasis
+    content.append(Paragraph("<b style='color: #1e3a8a'>TechMate Learning Platform</b>", body_style))
+    content.append(Paragraph("<i>Empowering Learners Worldwide</i>", footer_style))
     
     # Build PDF
     doc.build(content)
     buffer.seek(0)
+    
+    # Cleanup
+    import os
+    try:
+        os.remove(bg_path)
+        os.remove(logo_path)
+    except:
+        pass
+    
     return buffer
 
 def generate_certificate_filename(user, tutorial):
