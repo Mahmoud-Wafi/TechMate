@@ -32,9 +32,7 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     c.setStrokeColor(blue_dark)
     c.setLineWidth(1)
     
-    # Bottom dark section
-    c.setFillColor(colors.HexColor('#505050'))
-    c.rect(0, 0, page_width, 100, fill=True, stroke=False)
+
     
     # ===== LOGO (Top Left) =====
     logo_x = 50
@@ -75,8 +73,10 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     c.setFillColor(text_gray)
     c.drawCentredString(title_x, title_y - 90, "This is to certify that")
     
-    # User name (large, blue)
-    user_name = user.get_full_name() or user.username
+    # User name (large, blue) - always use full name
+    user_name = user.get_full_name()
+    if not user_name or user_name.strip() == '':
+        user_name = user.username
     c.setFont("Helvetica-Bold", 52)
     c.setFillColor(blue_dark)
     c.drawCentredString(title_x, title_y - 155, user_name)
@@ -90,8 +90,8 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     c.setFont("Helvetica-Bold", 11)
     c.setFillColor(dark_gray)
     c.drawString(label_x, detail_y, "Course Name :")
-    c.setFont("Helvetica", 12)
-    c.setFillColor(text_gray)
+    c.setFont("Helvetica-Bold", 16)
+    c.setFillColor(blue_dark)
     c.drawString(value_x, detail_y, tutorial.title)
     
     # Date
@@ -109,37 +109,11 @@ def generate_certificate_pdf(user, tutorial, certificate_number):
     c.setFont("Helvetica-Bold", 11)
     c.setFillColor(dark_gray)
     c.drawString(label_x, detail_y, "Signature :")
-    c.setFont("Helvetica", 12)
-    c.setFillColor(text_gray)
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColor(blue_dark)
     c.drawString(value_x, detail_y, "TechMate Team")
     
-    # ===== RED SEAL BADGE =====
-    seal_x = title_x
-    seal_y = detail_y - 90
-    seal_radius = 35
-    
-    # Draw main circle for seal
-    c.setFillColor(red_seal)
-    c.circle(seal_x, seal_y, seal_radius, fill=True, stroke=False)
-    
-    # Inner circle outline
-    c.setStrokeColor(colors.HexColor('#B4082A'))
-    c.setLineWidth(2)
-    c.circle(seal_x, seal_y, seal_radius - 8, fill=False, stroke=True)
-    
-    # Star points around seal
-    c.setStrokeColor(red_seal)
-    c.setLineWidth(2)
-    for i in range(12):
-        angle = i * 30
-        rad = math.radians(angle)
-        
-        x1 = seal_x + seal_radius * 1.15 * math.cos(rad)
-        y1 = seal_y + seal_radius * 1.15 * math.sin(rad)
-        x2 = seal_x + (seal_radius + 12) * math.cos(rad)
-        y2 = seal_y + (seal_radius + 12) * math.sin(rad)
-        
-        c.line(x1, y1, x2, y2)
+
     
     # Save to buffer
     c.save()
