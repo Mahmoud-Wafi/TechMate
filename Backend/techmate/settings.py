@@ -8,8 +8,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security & Debug
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-only-for-development')
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
 # Allowed Hosts - in production, specify your domain
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',') if os.environ.get('ALLOWED_HOSTS') else ['*']
+# Railway automatically sets RAILWAY_PUBLIC_DOMAIN, but we also support ALLOWED_HOSTS env var
+railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '')
+
+if allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+elif railway_domain:
+    ALLOWED_HOSTS = [railway_domain, f'.{railway_domain}']
+else:
+    # Development fallback - allows all hosts
+    ALLOWED_HOSTS = ['*']
 
 # Applications
 INSTALLED_APPS = [
