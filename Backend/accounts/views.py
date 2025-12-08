@@ -5,6 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.conf import settings
 from .serializers import (
     RegisterSerializer, UserSerializer, PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer, ProfileUpdateSerializer, ChangePasswordSerializer
@@ -15,19 +16,33 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            refresh = RefreshToken.for_user(user)
+        try:
+            serializer = RegisterSerializer(data=request.data)
+            if serializer.is_valid():
+                user = serializer.save()
+                refresh = RefreshToken.for_user(user)
+                # Refresh user instance to ensure profile is loaded
+                user.refresh_from_db()
+                return Response({
+                    'message': 'Registration successful',
+                    'user': UserSerializer(user).data,
+                    'tokens': {
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                    }
+                }, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            # Log the error for debugging (in production, use proper logging)
+            import traceback
+            error_detail = str(e)
+            traceback_str = traceback.format_exc()
+            # Return error details (remove in production if needed)
             return Response({
-                'message': 'Registration successful',
-                'user': UserSerializer(user).data,
-                'tokens': {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                }
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                'error': 'Registration failed',
+                'detail': error_detail,
+                'traceback': traceback_str if settings.DEBUG else None
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LoginView(APIView):

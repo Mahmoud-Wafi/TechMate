@@ -115,3 +115,4 @@ After setting variables:
 - Check Network tab - API calls should go to your backend URL
 - No CORS errors should appear
 
+

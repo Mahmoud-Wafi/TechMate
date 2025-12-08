@@ -20,6 +20,22 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'profile']
+    
+    def to_representation(self, instance):
+        """Handle cases where profile might not exist yet"""
+        data = super().to_representation(instance)
+        try:
+            # Ensure profile exists
+            if hasattr(instance, 'profile'):
+                return data
+            else:
+                # Profile doesn't exist, remove it from response
+                data.pop('profile', None)
+                return data
+        except Exception:
+            # If profile access fails, remove it from response
+            data.pop('profile', None)
+            return data
 
 
 class RegisterSerializer(serializers.Serializer):
